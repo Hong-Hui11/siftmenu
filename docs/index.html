@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sift Menu 开发文档 · v1.22.1</title>
+<title>Sift 模组开发文档 · Sift Menu 1.22.1 / Sift HUD 1.1.0</title>
 <style>
   :root {
     --ink: #1c2230;
@@ -247,8 +247,8 @@
 <div class="layout">
 <aside id="sidebar">
   <div class="brand">
-    <div class="name">Sift <span>Menu</span></div>
-    <div class="meta">Minecraft 26.3 · Fabric · v1.22.1</div>
+    <div class="name">Sift <span>Mods</span></div>
+    <div class="meta">Minecraft 26.3 · Fabric · Menu 1.22.1 · HUD 1.1.0</div>
   </div>
   <nav id="nav">
     <div class="group">开始</div>
@@ -282,6 +282,11 @@
     <a href="#custom-schema">字段说明</a>
     <a href="#custom-actions">动作类型</a>
     <a href="#custom-rules">覆盖与权限</a>
+    <div class="group">Sift HUD</div>
+    <a href="#hud-overview">HUD 概览</a>
+    <a href="#hud-architecture">HUD 数据流</a>
+    <a href="#hud-config">显示与配置</a>
+    <a href="#hud-develop">HUD 构建与扩展</a>
     <div class="group">开发与部署</div>
     <a href="#develop">二次开发指南</a>
     <a href="#build">构建</a>
@@ -295,14 +300,15 @@
 <article>
 
   <section class="hero">
-    <h1>Sift Menu 开发文档</h1>
-    <p>一个面向 Minecraft 26.3 / Fabric 的服务器菜单模组：把传送、经济、悬赏、队伍、邮箱等系统收进一个统一的 6×9 箱子菜单，并提供 JSON 驱动的自定义页面，让管理员无需改代码就能调整菜单。</p>
+    <h1>Sift 模组开发文档</h1>
+    <p>两个面向 Minecraft 26.3 / Fabric 的服务器配套模组：<strong>Sift Menu</strong> 把传送、经济、悬赏、队伍、邮箱收进 6×9 箱子菜单，并支持 JSON 自定义页面；<strong>Sift HUD</strong> 在按住 Tab 时显示在线、延迟、维度、金币与 TPS。本文档覆盖两者的实现原理、配置与二次开发。</p>
     <div class="badges">
       <span class="badge">Minecraft 26.3</span>
       <span class="badge">Fabric Loader ≥ 0.19.5</span>
       <span class="badge">Java 25</span>
       <span class="badge">MIT License</span>
-      <span class="badge">61 个源文件</span>
+      <span class="badge">Sift Menu 1.22.1</span>
+      <span class="badge">Sift HUD 1.1.0</span>
     </div>
   </section>
 
@@ -314,6 +320,7 @@
     <div class="card"><b>经济系统</b><span>全球市场（服务器买卖）、自由市场（玩家挂单）、金币与税收</span></div>
     <div class="card"><b>玩法系统</b><span>悬赏任务、头衔、邮箱补偿、Bingo 联动、小游戏入口</span></div>
     <div class="card"><b>服务器治理</b><span>大厅保护、区块清理、掉落物清理、睡眠跳过、兼容修复</span></div>
+    <div class="card"><b>统计板（Sift HUD）</b><span>按住 Tab 显示在线、延迟、维度、金币与 TPS，H 键调整位置</span></div>
   </div>
 
   <h3>功能与代码对照</h3>
@@ -337,6 +344,7 @@
       <tr><td>聊天输入</td><td><code>ChatInput</code></td><td>创建家、改价、写公告等</td></tr>
       <tr><td>大厅保护</td><td><code>LobbyBuildGuard</code> / <code>LobbyMobGuard</code> / <code>LobbyTimeSync</code></td><td><code>sift:lobby</code> 维度</td></tr>
       <tr><td>维护</td><td><code>ChunkUnloadManager</code> / <code>CleanupManager</code> / <code>SleepSkip</code></td><td>服务端 tick</td></tr>
+      <tr><td>统计板（Sift HUD）</td><td><code>ServerStats</code> / <code>StatsPanel</code> / <code>HudConfig</code></td><td>按住 Tab / H 键编辑</td></tr>
     </tbody>
   </table>
 
@@ -869,12 +877,105 @@
     <li>重启服务器，确认日志出现 <code>[siftmenu] 自定义菜单已加载</code>；</li>
     <li>进服执行 <code>/siftmenu</code> 验证主菜单；管理员执行 <code>/siftmenu menu reload</code>。</li>
   </ol>
+  <p>Sift HUD 的安装方式相同：把 <code>sifthud-1.1.0.jar</code> 同时放进服务端与客户端 <code>mods/</code> 即可，不需要额外配置。</p>
   <div class="note">
     <b>配置目录</b>
     服务端：<code>config/siftmenu-data.json</code>、<code>config/siftmenu/menus.json</code>。迁移服务器时一并备份。
   </div>
 
-  <h2 id="faq"><span class="num">09</span>常见问题</h2>
+  <h2 id="hud-overview"><span class="num">10</span>Sift HUD 概览</h2>
+  <p class="lead">Sift HUD 是独立的统计板模组：服务端采集数据，客户端在按住 <kbd>Tab</kbd> 时把面板叠在原版玩家列表旁边。它与 Sift Menu 共用同一套网络包风格，但可以单独安装。</p>
+  <table>
+    <thead><tr><th>显示项</th><th>数据来源</th></tr></thead>
+    <tbody>
+      <tr><td>在线人数</td><td>服务端玩家列表，客户端数据过期时回退到连接信息</td></tr>
+      <tr><td>延迟</td><td>服务端主动探测的往返时间；无服务端数据时用客户端 PlayerInfo</td></tr>
+      <tr><td>当前维度</td><td>客户端维度 id + 配置映射（原版三维度内置中文名）</td></tr>
+      <tr><td>全服金币 / 我的金币</td><td>安装 Sift Menu 时通过反射读取 <code>Economy</code>，否则显示 0.00</td></tr>
+      <tr><td>TPS（1 / 5 / 15 秒）</td><td>服务端 15 秒 tick 窗口计算</td></tr>
+    </tbody>
+  </table>
+  <h3>安装与使用</h3>
+  <ol>
+    <li>把 <code>sifthud-1.1.0.jar</code> 放进客户端与服务端的 <code>mods/</code>；</li>
+    <li>进入游戏，按住 <kbd>Tab</kbd> 显示统计板，松开隐藏；</li>
+    <li>按 <kbd>H</kbd> 打开位置编辑器，拖动面板后点击「保存并关闭」。</li>
+  </ol>
+  <div class="note">
+    <b>可独立运行</b>
+    没有 Sift Menu 时，金币一栏固定为 0.00，其余数据正常；HUD 不会因为缺少经济模组而报错。客户端配置只影响渲染，服务端不需要读取 <code>sifthud.json</code>。
+  </div>
+
+  <h2 id="hud-architecture"><span class="num">11</span>HUD 数据流与实现</h2>
+  <div class="flow">
+    <div class="node"><b>服务端 tick</b><span>ServerStats 记录 tick 时间</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>每 5 秒汇总</b><span>TPS / 在线 / 上次延迟</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>StatsPayload</b><span>下发给每个在线玩家</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>StatsPanel</b><span>按住 Tab 时渲染</span></div>
+  </div>
+  <h3>TPS 统计</h3>
+  <p><code>ServerStats.tick</code> 把每次服务端 tick 的 <code>System.nanoTime()</code> 放进 <code>ArrayDeque</code>，只保留最近 15 秒。计算时取窗口首尾的 tick 间隔求平均，再换算成 <code>1000 / 平均间隔</code>，上限 20；样本不足两个时按 20 处理。最终同时下发 1 秒、5 秒、15 秒三个窗口。</p>
+  <h3>延迟探测</h3>
+  <p>每 5 秒服务端给每个玩家发一条带自增 <code>seq</code> 的 <code>PingProbePayload</code>，客户端原样回 <code>PingReplyPayload</code>；服务端用发送时间与收到时间之差得到往返毫秒数，写入 <code>PING_MS</code>，随下一次 <code>StatsPayload</code> 下发。断线时清理该玩家的探测状态。</p>
+  <h3>经济桥接</h3>
+  <p><code>EconomyBridge</code> 先判断 <code>siftmenu</code> 是否加载，再用反射调用 <code>com.echoes.siftmenu.Economy.total()</code> 与 <code>balance(ServerPlayer)</code>，把「分」原样放进 <code>EconomyPayload</code>；客户端显示时除以 100 并保留两位小数。反射失败只记录一次警告，HUD 继续工作。</p>
+  <h3>客户端渲染</h3>
+  <p><code>StatsPanel</code> 通过 <code>HudElementRegistry.attachElementAfter(VanillaHudElements.PLAYER_LIST, ...)</code> 挂载，所以面板只在按住 Tab（原版玩家列表键）时出现，且不会与其他 HUD 抢位置。服务端数据超过 12 秒未更新时视为过期，在线与延迟回退到客户端连接信息。</p>
+  <h3>网络包</h3>
+  <table>
+    <thead><tr><th>网络包</th><th>方向</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><code>StatsPayload</code></td><td>S → C</td><td>TPS 1/5/15、在线人数、延迟（-1 表示未知）</td></tr>
+      <tr><td><code>EconomyPayload</code></td><td>S → C</td><td>个人余额与全服总量（单位为分）</td></tr>
+      <tr><td><code>PingProbePayload</code></td><td>S → C</td><td>探测序号</td></tr>
+      <tr><td><code>PingReplyPayload</code></td><td>C → S</td><td>原样返回探测序号</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="hud-config"><span class="num">12</span>显示与配置</h2>
+  <h3>面板内容</h3>
+  <p>面板固定 12 行、高度 140px，宽度按内容动态计算（最小 110px）。行结构由 <code>StatsPanel.rows()</code> 生成：标题、日期、分隔线、信息（在线 / 延迟 / 世界）、金币（全服 / 个人）、TPS（1 / 5 / 15 秒）、分隔线。</p>
+  <h3>位置与编辑器</h3>
+  <p>位置用 0–1 的相对坐标 <code>statsX</code> / <code>statsY</code> 保存，渲染时乘以「屏幕尺寸 − 面板尺寸」，因此换分辨率或 GUI 缩放后仍然贴边。默认 <code>0.995 / 0.5</code>（屏幕右侧中间）。按 <kbd>H</kbd> 打开 <code>HudEditorScreen</code>：左键拖动面板，点「保存并关闭」写入配置，「恢复默认」只重置位置。</p>
+  <h3>config/sifthud.json</h3>
+  <table>
+    <thead><tr><th>字段</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>statsX</code> / <code>statsY</code></td><td>面板相对位置，0–1；由编辑器写入</td></tr>
+      <tr><td><code>title</code></td><td>面板标题，默认「服务器状态」，最长 24 字符，留空回退默认</td></tr>
+      <tr><td><code>dimensionNames</code></td><td>维度 id → 显示名；键可以是完整 id 或路径</td></tr>
+    </tbody>
+  </table>
+  <p>示例：<code>docs/examples/sifthud.json</code>。维度名解析顺序为：配置完整 id → 配置路径 → 内置完整 id → 内置路径 → 直接显示路径。</p>
+
+  <h2 id="hud-develop"><span class="num">13</span>HUD 构建与扩展</h2>
+  <h3>构建</h3>
+  <pre><code>.\build.ps1 -McJar "C:\path\to\mc-26.3-aw.jar" -ModsDir "D:\...\mods"</code></pre>
+  <p>产物：<code>build/sifthud-1.1.0.jar</code>。脚本与服务端菜单模组相同：自动解包 Fabric API、收集 classpath、JDK 25 编译、JDK <code>jar</code> 工具打包。</p>
+  <h3>新增一行</h3>
+  <ol>
+    <li>在 <code>StatsPanel.rows()</code> 里追加 <code>Row.text(new Span("标签: ", 颜色), new Span(值, 颜色))</code>；</li>
+    <li>同步调整 <code>panelHeight()</code>（当前 12 行 × 11px + 内边距 = 140）与 <code>ROW_COUNT</code>；</li>
+    <li>数据若来自服务端，在 <code>StatsPayload</code> 增加字段并同步 <code>StatsPanel.setStats</code>。</li>
+  </ol>
+  <h3>新增维度名</h3>
+  <p>优先让管理员写进 <code>dimensionNames</code>；如果要内置，在 <code>StatsPanel.DIMENSION_NAMES</code> 增加完整 id 与路径两条映射即可。</p>
+  <h3>新增服务端数据</h3>
+  <ol>
+    <li>照 <code>StatsPayload</code> 新建 record + <code>StreamCodec</code>；</li>
+    <li>在 <code>SiftHud.onInitialize</code> 注册 <code>PayloadTypeRegistry</code>；</li>
+    <li>在 <code>ServerStats.tick</code> 里组装并发送，发送前用 <code>canSend</code> 判断；</li>
+    <li>客户端在 <code>SiftHudClient</code> 注册接收器，并用 <code>client.execute(...)</code> 切回客户端线程。</li>
+  </ol>
+  <div class="tip">
+    <b>保持可降级</b>
+    任何新增数据都必须允许「服务端未安装 / 数据过期」的情况：面板要回退到客户端能拿到的信息，不能因为缺少字段而空白或崩溃。
+  </div>
+
+  <h2 id="faq"><span class="num">14</span>常见问题</h2>
 
   <h4>改了 menus.json 没生效？</h4>
   <p>执行 <code>/siftmenu menu reload</code>；确认页面 <code>id</code> 唯一、按钮槽位在 0–53、物品 id 正确。重载失败时旧配置会继续生效，检查服务端日志里的 <code>[siftmenu]</code> 警告。</p>
@@ -894,17 +995,28 @@
   <h4>如何只让管理员看到某个自定义页面？</h4>
   <p>页面设置 <code>"permission": "admin"</code>；按钮也可以单独设置。控制台身份执行命令的按钮必须有管理员权限。</p>
 
-  <h2 id="license"><span class="num">10</span>许可与贡献</h2>
-  <p>本项目使用 MIT License，可自由用于整合包、服务器与二次开发，保留版权声明即可。</p>
+  <h4>按住 Tab 没有出现统计板？</h4>
+  <p>确认客户端与服务端都安装了 Sift HUD，且没有改过原版「玩家列表」按键；服务端数据超过 12 秒未更新时面板仍会显示，但会回退到客户端在线/延迟数据。若装了其他 HUD 模组，检查是否被布局覆盖。</p>
+
+  <h4>统计板金币一直是 0.00？</h4>
+  <p>Sift HUD 通过反射读取 Sift Menu 的 <code>Economy</code>。未安装 Sift Menu、或经济桥接初始化失败时，金币固定为 0.00；查看客户端日志里是否有 <code>[sifthud]</code> 警告。</p>
+
+  <h4>想改统计板标题或维度名？</h4>
+  <p>编辑客户端 <code>config/sifthud.json</code> 的 <code>title</code> 与 <code>dimensionNames</code>，重进游戏生效；位置建议直接用 <kbd>H</kbd> 编辑器调整。</p>
+
+  <h2 id="license"><span class="num">15</span>许可与贡献</h2>
+  <p>Sift Menu 与 Sift HUD 均使用 MIT License，可自由用于整合包、服务器与二次开发，保留版权声明即可。</p>
   <ul>
-    <li>提交前请保证 <code>.\build.ps1</code> 能通过；</li>
-    <li>新增或修改玩家可见行为时，同步更新本页文档与 <code>docs/examples/menus.example.json</code>；</li>
-    <li>涉及数据结构的改动必须提供 <code>normalize()</code> 兼容逻辑与迁移说明；</li>
+    <li>Sift Menu：https://github.com/Hong-Hui11/siftmenu</li>
+    <li>Sift HUD：https://github.com/Hong-Hui11/sifthud</li>
+    <li>提交前请保证对应仓库的 <code>.\build.ps1</code> 能通过；</li>
+    <li>新增或修改玩家可见行为时，同步更新本页文档与 <code>docs/examples/</code> 示例；</li>
+    <li>涉及数据结构的改动必须提供兼容逻辑与迁移说明；</li>
     <li>不要提交 <code>build/</code>、本地配置、服务器存档或密钥。</li>
   </ul>
 
   <footer>
-    Sift Menu v1.22.1 · 文档随代码仓库发布 · 最后更新：2026-11-24
+    Sift Menu 1.22.1 / Sift HUD 1.1.0 · 文档随代码仓库发布 · 最后更新：2026-11-24
   </footer>
 
 </article>

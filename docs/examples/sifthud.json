@@ -1,0 +1,11 @@
+{
+  "statsX": 0.995,
+  "statsY": 0.5,
+  "title": "服务器状态",
+  "dimensionNames": {
+    "minecraft:overworld": "主世界",
+    "minecraft:the_nether": "下界",
+    "minecraft:the_end": "末地",
+    "my_mod:my_dimension": "自定义维度"
+  }
+}
