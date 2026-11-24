@@ -236,6 +236,7 @@
     .hero { padding: 24px 22px; }
     .hero h1 { font-size: 24px; }
     .toc-top { columns: 1; }
+    h2, h3 { scroll-margin-top: 68px; }
   }
 </style>
 </head>
@@ -1042,8 +1043,11 @@
     if (!sections.length) return;
     var line = window.scrollY + 96;
     var current = sections[0].id;
+    var best = -1;
     sections.forEach(function (section) {
-      if (section.offsetTop <= line) {
+      // 按文档位置取「最靠下的已到达章节」，不依赖侧栏链接顺序
+      if (section.offsetTop <= line && section.offsetTop >= best) {
+        best = section.offsetTop;
         current = section.id;
       }
     });
