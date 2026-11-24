@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sift Menu 开发文档 · v1.22.1</title>
+<style>
+  :root {
+    --ink: #1c2230;
+    --ink-soft: #4c5568;
+    --muted: #737d90;
+    --line: #e3e7ee;
+    --line-strong: #cfd6e0;
+    --bg: #f7f8fa;
+    --panel: #ffffff;
+    --accent: #2f6f5e;
+    --accent-soft: #e8f2ee;
+    --amber: #a9741f;
+    --amber-soft: #fbf3e4;
+    --danger: #a63d3d;
+    --danger-soft: #fbebeb;
+    --code-bg: #1e2430;
+    --code-ink: #dfe6f1;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(20, 30, 50, .05), 0 8px 24px rgba(20, 30, 50, .04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre, kbd {
+    font-family: "Cascadia Code", "JetBrains Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+  }
+  code {
+    background: #eef1f6;
+    border: 1px solid #e1e6ee;
+    border-radius: 5px;
+    padding: .1em .35em;
+    font-size: .88em;
+    color: #2b3546;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.65;
+    margin: 16px 0;
+    box-shadow: var(--shadow);
+  }
+  pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+  kbd {
+    background: #fff;
+    border: 1px solid var(--line-strong);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    padding: .05em .4em;
+    font-size: .82em;
+  }
+
+  /* ---------- layout ---------- */
+  .layout { display: flex; min-height: 100vh; }
+  aside {
+    width: 274px;
+    flex: 0 0 274px;
+    background: #fff;
+    border-right: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 26px 18px 40px;
+  }
+  .brand { padding: 0 8px 18px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .brand .name { font-size: 19px; font-weight: 700; letter-spacing: .2px; }
+  .brand .name span { color: var(--accent); }
+  .brand .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  nav .group { margin: 18px 0 6px; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; padding: 0 8px; }
+  nav a {
+    display: block;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border-left: 2px solid transparent;
+  }
+  nav a:hover { background: #f2f5f9; text-decoration: none; color: var(--ink); }
+  nav a.active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+
+  main { flex: 1; min-width: 0; padding: 44px 56px 90px; max-width: 1080px; }
+  article { max-width: 860px; }
+
+  .hero {
+    background: linear-gradient(135deg, #24483f 0%, #2f6f5e 58%, #3c8572 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 30px 34px;
+    box-shadow: 0 12px 32px rgba(30, 70, 60, .18);
+    margin-bottom: 34px;
+  }
+  .hero h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: .3px; }
+  .hero p { margin: 0; color: #d8ece5; font-size: 14.5px; max-width: 620px; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .badge {
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.22);
+    color: #f2fbf8;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  h2 {
+    font-size: 24px;
+    margin: 54px 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    scroll-margin-top: 24px;
+  }
+  h2 .num { color: var(--accent); font-weight: 700; margin-right: 8px; font-size: 18px; }
+  h3 { font-size: 17.5px; margin: 30px 0 8px; scroll-margin-top: 24px; }
+  h4 { font-size: 15px; margin: 20px 0 6px; color: var(--ink); }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  li > code { white-space: nowrap; }
+
+  .lead { color: var(--ink-soft); font-size: 15.5px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    font-size: 13.8px;
+    box-shadow: var(--shadow);
+  }
+  th, td { text-align: left; padding: 9px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: #f3f6f9; font-weight: 600; color: var(--ink-soft); font-size: 12.5px; letter-spacing: .03em; }
+  tr:last-child td { border-bottom: 0; }
+  td code { white-space: nowrap; }
+
+  .note, .warn, .tip {
+    border-radius: var(--radius);
+    padding: 13px 16px;
+    margin: 16px 0;
+    font-size: 14px;
+    border: 1px solid;
+  }
+  .note { background: var(--accent-soft); border-color: #cfe5dd; }
+  .warn { background: var(--amber-soft); border-color: #f0dcb4; }
+  .tip { background: #eef2fb; border-color: #d6dff2; }
+  .note b, .warn b, .tip b { display: block; margin-bottom: 2px; }
+
+  /* ---------- flow diagram ---------- */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 20px 0 8px;
+  }
+  .flow .node {
+    flex: 1 1 150px;
+    background: #fff;
+    border: 1px solid var(--line-strong);
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-size: 13px;
+    box-shadow: var(--shadow);
+  }
+  .flow .node b { display: block; color: var(--accent); font-size: 13.5px; margin-bottom: 2px; }
+  .flow .node span { color: var(--muted); font-size: 12px; }
+  .flow .arrow { align-self: center; color: var(--line-strong); font-size: 20px; }
+
+  /* ---------- feature cards ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 16px 0; }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .card b { display: block; margin-bottom: 4px; font-size: 14.5px; }
+  .card span { color: var(--muted); font-size: 13px; }
+
+  .toc-top { columns: 2; column-gap: 28px; margin: 14px 0; }
+  .toc-top a { display: block; padding: 3px 0; font-size: 14px; break-inside: avoid; }
+
+  footer {
+    margin-top: 70px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+  .mobile-bar { display: none; }
+
+  @media (max-width: 960px) {
+    aside { display: none; }
+    aside.open { display: block; position: fixed; z-index: 30; width: 280px; box-shadow: 0 0 40px rgba(0,0,0,.2); }
+    main { padding: 26px 20px 70px; }
+    .mobile-bar {
+      display: flex; align-items: center; gap: 10px;
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 14px;
+    }
+    .mobile-bar button {
+      background: #fff; border: 1px solid var(--line-strong); border-radius: 6px;
+      padding: 5px 10px; font-size: 13px; color: var(--ink);
+    }
+    .hero { padding: 24px 22px; }
+    .hero h1 { font-size: 24px; }
+    .toc-top { columns: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="mobile-bar">
+  <button id="menuBtn">目录</button>
+  <strong>Sift Menu 开发文档</strong>
+</div>
+<div class="layout">
+<aside id="sidebar">
+  <div class="brand">
+    <div class="name">Sift <span>Menu</span></div>
+    <div class="meta">Minecraft 26.3 · Fabric · v1.22.1</div>
+  </div>
+  <nav id="nav">
+    <div class="group">开始</div>
+    <a href="#overview">项目概览</a>
+    <a href="#quickstart">快速开始</a>
+    <a href="#server-config">服务器配置</a>
+    <div class="group">架构</div>
+    <a href="#architecture">整体架构</a>
+    <a href="#data-model">数据持久化</a>
+    <a href="#networking">网络包与事件</a>
+    <div class="group">功能实现</div>
+    <a href="#menu-core">菜单框架</a>
+    <a href="#homes">家与传送点</a>
+    <a href="#deaths">死亡点</a>
+    <a href="#random">随机传送</a>
+    <a href="#players">玩家传送</a>
+    <a href="#party">队伍</a>
+    <a href="#global-market">全球经济</a>
+    <a href="#free-market">自由市场</a>
+    <a href="#bounty">悬赏任务</a>
+    <a href="#titles">头衔系统</a>
+    <a href="#mailbox">邮箱与补偿</a>
+    <a href="#bingo">Bingo 联动</a>
+    <a href="#chat-input">聊天输入</a>
+    <a href="#lobby">主城大厅</a>
+    <a href="#maintenance">性能与维护</a>
+    <a href="#mixins">兼容修复 Mixin</a>
+    <a href="#client">客户端功能</a>
+    <div class="group">自定义菜单</div>
+    <a href="#custom-menu">配置总览</a>
+    <a href="#custom-schema">字段说明</a>
+    <a href="#custom-actions">动作类型</a>
+    <a href="#custom-rules">覆盖与权限</a>
+    <div class="group">开发与部署</div>
+    <a href="#develop">二次开发指南</a>
+    <a href="#build">构建</a>
+    <a href="#deploy">部署模组</a>
+    <a href="#faq">常见问题</a>
+    <a href="#license">许可与贡献</a>
+  </nav>
+</aside>
+
+<main>
+<article>
+
+  <section class="hero">
+    <h1>Sift Menu 开发文档</h1>
+    <p>一个面向 Minecraft 26.3 / Fabric 的服务器菜单模组：把传送、经济、悬赏、队伍、邮箱等系统收进一个统一的 6×9 箱子菜单，并提供 JSON 驱动的自定义页面，让管理员无需改代码就能调整菜单。</p>
+    <div class="badges">
+      <span class="badge">Minecraft 26.3</span>
+      <span class="badge">Fabric Loader ≥ 0.19.5</span>
+      <span class="badge">Java 25</span>
+      <span class="badge">MIT License</span>
+      <span class="badge">61 个源文件</span>
+    </div>
+  </section>
+
+  <h2 id="overview"><span class="num">01</span>项目概览</h2>
+  <p class="lead">Sift Menu 最初是「筛界」整合包的服务器配套模组。服务端负责菜单逻辑、经济与数据持久化，客户端只负责按键、HUD 与少量渲染。模组本身不注册物品与方块，所有交互都通过原版箱子 GUI 与网络包完成。</p>
+
+  <div class="grid">
+    <div class="card"><b>菜单与传送</b><span>家、死亡点、随机传送、玩家互传、主城大厅、精品传送点</span></div>
+    <div class="card"><b>经济系统</b><span>全球市场（服务器买卖）、自由市场（玩家挂单）、金币与税收</span></div>
+    <div class="card"><b>玩法系统</b><span>悬赏任务、头衔、邮箱补偿、Bingo 联动、小游戏入口</span></div>
+    <div class="card"><b>服务器治理</b><span>大厅保护、区块清理、掉落物清理、睡眠跳过、兼容修复</span></div>
+  </div>
+
+  <h3>功能与代码对照</h3>
+  <table>
+    <thead><tr><th>功能</th><th>主要实现</th><th>入口</th></tr></thead>
+    <tbody>
+      <tr><td>菜单框架</td><td><code>MenuManager</code>（页面、渲染、点击）、<code>SimpleContainer</code></td><td>G 键 / 菜单书 / <code>/siftmenu</code></td></tr>
+      <tr><td>数据持久化</td><td><code>MenuData</code> → <code>config/siftmenu-data.json</code></td><td>所有系统共用</td></tr>
+      <tr><td>自定义页面</td><td><code>CustomMenus</code> → <code>config/siftmenu/menus.json</code></td><td><code>/siftmenu menu reload</code></td></tr>
+      <tr><td>家 / 公共点 / 精品位</td><td><code>MenuData.Home</code> + <code>MenuManager</code></td><td>主菜单「创建家 / 我的家」</td></tr>
+      <tr><td>死亡点</td><td><code>ServerLivingEntityEvents.AFTER_DEATH</code> + <code>MenuData.Death</code></td><td>主菜单「死亡地点传送」</td></tr>
+      <tr><td>随机传送</td><td><code>MenuManager.randomTeleport</code></td><td>「世界传送」</td></tr>
+      <tr><td>玩家传送</td><td><code>TeleportRequestManager</code></td><td>「玩家之间传送」</td></tr>
+      <tr><td>队伍</td><td><code>PartyManager</code> + FTB Teams 界面</td><td>「创建队伍」</td></tr>
+      <tr><td>全球经济</td><td><code>GlobalMarket</code> + <code>Economy</code></td><td>「全球市场」</td></tr>
+      <tr><td>自由市场</td><td><code>FreeMarket</code> + <code>MenuData.MarketListing</code></td><td>「自由市场」</td></tr>
+      <tr><td>悬赏</td><td><code>BountyCatalog</code> + <code>BountyService</code> + 客户端 HUD</td><td>「悬赏任务」</td></tr>
+      <tr><td>头衔</td><td><code>Titles</code></td><td>「我的头衔」</td></tr>
+      <tr><td>邮箱 / 补偿</td><td><code>Mailbox</code></td><td>「邮箱」/ <code>/siftmenu mail</code></td></tr>
+      <tr><td>Bingo</td><td><code>BingoHook</code> / <code>BingoReward</code>（反射 + 签名令牌）</td><td>Bingo 服菜单</td></tr>
+      <tr><td>聊天输入</td><td><code>ChatInput</code></td><td>创建家、改价、写公告等</td></tr>
+      <tr><td>大厅保护</td><td><code>LobbyBuildGuard</code> / <code>LobbyMobGuard</code> / <code>LobbyTimeSync</code></td><td><code>sift:lobby</code> 维度</td></tr>
+      <tr><td>维护</td><td><code>ChunkUnloadManager</code> / <code>CleanupManager</code> / <code>SleepSkip</code></td><td>服务端 tick</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="quickstart"><span class="num">02</span>快速开始</h2>
+
+  <h3>服务器安装</h3>
+  <ol>
+    <li>把 <code>siftmenu-1.22.1.jar</code> 放进服务端 <code>mods/</code>。</li>
+    <li>确认已安装 <code>fabric-api</code>（26.3 版本）与 Fabric Loader ≥ 0.19.5。</li>
+    <li>启动服务器。模组会生成 <code>config/siftmenu-data.json</code> 与 <code>config/siftmenu/menus.json</code>。</li>
+    <li>服务器内执行 <code>/siftmenu</code> 打开主菜单；管理员执行 <code>/siftmenu menu reload</code> 重载自定义页面。</li>
+  </ol>
+
+  <h3>客户端安装</h3>
+  <p>把同一个 jar 放进客户端 <code>mods/</code> 即可。客户端提供：</p>
+  <ul>
+    <li><kbd>G</kbd> 键打开菜单（可在「按键设置」里改键）；</li>
+    <li>悬赏 HUD 与点击跳转；</li>
+    <li>Bingo 胜利令牌的缓存与自动领取；</li>
+    <li>FTB Teams 界面跳转与队伍状态诊断。</li>
+  </ul>
+
+  <div class="note">
+    <b>服务端与客户端必须使用同一份 jar</b>
+    模组声明了 <code>"environment": "*"</code>。只装服务端时菜单仍可使用，但 HUD、按键与 Bingo 领取等客户端功能不可用。
+  </div>
+
+  <h3 id="server-config">服务器配置</h3>
+  <p>跨服地址与赞助链接不写死在代码里。首次启动会生成 <code>config/siftmenu/config.json</code>，默认全部留空：</p>
+<pre><code>{
+  "schema": 1,
+  "servers": {
+    "main":    { "host": "", "port": 0 },
+    "bingo":   { "host": "", "port": 0 },
+    "bedwars": { "host": "", "port": 0 }
+  },
+  "sponsorUrl": ""
+}</code></pre>
+  <table>
+    <thead><tr><th>字段</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><code>servers.main</code></td><td>「返回主服」与 Bingo 胜利奖励领取的目标服务器</td></tr>
+      <tr><td><code>servers.bingo</code></td><td>小游戏页 Bingo 入口</td></tr>
+      <tr><td><code>servers.bedwars</code></td><td>小游戏页起床战争入口</td></tr>
+      <tr><td><code>sponsorUrl</code></td><td>主菜单「服务器赞助」按钮显示的链接；留空显示「准备中」</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <b>留空即禁用</b>
+    未填写地址时，对应入口会提示「未配置」，不会连接到任何默认服务器。修改配置后重启服务器生效。
+  </div>
+
+  <h2 id="architecture"><span class="num">03</span>整体架构</h2>
+
+  <h3 id="structure">目录结构</h3>
+<pre><code>siftmenu-public/
+├─ build.ps1                    # 无 Gradle 的构建脚本
+├─ src/main/java/com/echoes/siftmenu/
+│  ├─ SiftMenu.java             # 模组入口：注册网络包、命令、事件、tick
+│  ├─ MenuManager.java          # 菜单框架：页面枚举、渲染、点击分发（约 3300 行）
+│  ├─ CustomMenus.java          # 数据驱动自定义菜单：加载 / 渲染 / 动作 / 重载
+│  ├─ MenuData.java             # 全部持久化数据模型
+│  ├─ Economy.java / Money.java # 金币账户、分单位换算与格式化
+│  ├─ GlobalMarket.java         # 服务器买卖市场
+│  ├─ FreeMarket.java           # 玩家挂单市场
+│  ├─ BountyCatalog.java        # 悬赏定义表
+│  ├─ BountyService.java        # 悬赏板、进度、HUD、领取
+│  ├─ Mailbox.java              # 公告 / 补偿邮件
+│  ├─ Titles.java               # 头衔定义、解锁、队伍前缀
+│  ├─ ChatInput.java            # 聊天栏文本输入状态机
+│  ├─ PartyManager.java         # 队伍邀请 / 转让 / 踢人 / PvP
+│  ├─ TeleportRequestManager.java # 玩家传送请求与同意
+│  ├─ BingoHook.java / BingoReward.java # Bingo 反射联动与奖励
+│  ├─ Lobby*.java               # 主城大厅保护与时间同步
+│  ├─ ChunkUnloadManager.java   # 区块票据清理
+│  ├─ CleanupManager.java       # 掉落物清理
+│  ├─ *Payload.java             # 网络包 record + StreamCodec
+│  ├─ mixin/                    # 服务端 Mixin（兼容 / 统计 / 反作弊辅助）
+│  └─ client/                   # 客户端入口、悬赏 HUD、按键
+└─ src/main/resources/
+   ├─ fabric.mod.json
+   ├─ *.mixins.json
+   ├─ assets/siftmenu/          # 语言文件</code></pre>
+
+  <h3 id="flow">一次「打开菜单 → 点击按钮」的完整流程</h3>
+  <div class="flow">
+    <div class="node"><b>客户端按键</b><span>G 键 → 发送 OpenMenuPayload</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>服务端接收</b><span>SiftMenu 注册的全局接收器</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>MenuManager.openMain</b><span>按环境选择 MAIN / BINGO</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>SiftMenuContainer</b><span>54 格 SimpleContainer + 标题 + 渲染</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>原版 GUI</b><span>客户端收到 9×6 箱子界面</span></div>
+  </div>
+  <p>玩家点击时，原版会向服务端发送 <code>ContainerInput</code>。容器的 <code>clicked()</code> 只处理 0–53 号槽位：左/右键走 <code>handleClick</code>，Shift+点击走 <code>handleShiftClick</code>。两个方法都会先询问 <code>CustomMenus.handleClick</code>，未消费才进入内置页面的分支。</p>
+
+  <div class="flow">
+    <div class="node"><b>点击槽位</b><span>slot 0–53</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>CustomMenus 优先</b><span>自定义按钮 / 独立页面</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>内置 switch</b><span>按 Page 枚举分发</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>业务方法</b><span>传送、买卖、领取、翻页</span></div>
+    <div class="arrow">→</div>
+    <div class="node"><b>setPage / 重新渲染</b><span>broadcastChanges 同步客户端</span></div>
+  </div>
+
+  <div class="note">
+    <b>为什么用箱子 GUI</b>
+    原版 <code>MenuType.GENERIC_9x6</code> 自带客户端渲染、拖拽抑制与容器同步，服务端只需准备 54 个 <code>ItemStack</code>。因此模组不需要任何自定义 GUI 代码，也不依赖客户端安装才能打开菜单。
+  </div>
+
+  <h3 id="data-model">数据持久化</h3>
+  <p>所有玩家数据集中保存在 <code>config/siftmenu-data.json</code>（<code>MenuData</code> 单例，<code>get()</code> 懒加载）。选型原因：服务器数据量小、便于备份与人工排查；读写都在服务端主线程，写入是「整文件覆盖」。</p>
+  <table>
+    <thead><tr><th>字段</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><code>homes</code> / <code>deaths</code></td><td>按玩家 UUID 分组：家（最多 64，含公共/精品标记）、最近 5 次死亡点</td></tr>
+      <tr><td><code>balances</code> / <code>currencyVersion</code></td><td>金币余额（内部「分」，1 金币 = 100 分），版本 2 起启用十进制</td></tr>
+      <tr><td><code>listings</code> / <code>pendingItems</code></td><td>自由市场挂单、背包满时的待领取物品</td></tr>
+      <tr><td><code>sellAdmin</code> / <code>buyAdmin</code> / <code>removed*</code></td><td>全球市场的管理员定价覆盖与下架列表</td></tr>
+      <tr><td><code>daily*</code> / <code>buy*</code></td><td>每日产出/回收/税/挂单费统计，收购动态价格与 7 日成交量</td></tr>
+      <tr><td><code>titles</code></td><td>玩家佩戴的头衔 id、自定义文本与颜色</td></tr>
+      <tr><td><code>mails</code> / <code>mailRead</code> / <code>mailClaimed</code></td><td>公告与补偿邮件、阅读与领取记录</td></tr>
+      <tr><td><code>parties</code> / <code>playerParty</code> / <code>invites</code></td><td>队伍、成员归属、待处理邀请</td></tr>
+      <tr><td><code>bountyBoard</code> / <code>bountyProgress</code></td><td>当日悬赏板、玩家进度、每日接取计数</td></tr>
+      <tr><td><code>premiumContrib</code></td><td>精品传送点的访客收益累计（按发布者封顶）</td></tr>
+    </tbody>
+  </table>
+  <p><code>normalize()</code> 负责字段补全，<code>migrateCurrency()</code> 负责旧存档的整数金币 → 分迁移（迁移前会写 <code>siftmenu-data.pre-decimal.bak</code>）。</p>
+
+  <h3 id="networking">网络包与事件</h3>
+  <table>
+    <thead><tr><th>网络包</th><th>方向</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td><code>OpenMenuPayload</code></td><td>C → S</td><td>G 键请求打开主菜单</td></tr>
+      <tr><td><code>OpenFtbPayload</code></td><td>S → C</td><td>让客户端打开 FTB Teams 界面</td></tr>
+      <tr><td><code>BountyHudPayload</code> / <code>BountyHudClickPayload</code></td><td>S → C / C → S</td><td>悬赏 HUD 内容与点击打开详情</td></tr>
+      <tr><td><code>BingoWinPayload</code> / <code>BingoClaimPayload</code> / <code>BingoClaimResultPayload</code></td><td>双向</td><td>胜利令牌下发、领取请求、结果回执</td></tr>
+      <tr><td><code>TeamStatusPayload</code> / <code>TeamResyncPayload</code></td><td>双向</td><td>队伍同步诊断与强制重同步</td></tr>
+    </tbody>
+  </table>
+
+  <h4>主要事件注册（SiftMenu.onInitialize）</h4>
+  <ul>
+    <li><code>CommandRegistrationCallback</code>：<code>/siftmenu</code> 与 <code>/siftmenu menu</code> 命令树；</li>
+    <li><code>ServerLivingEntityEvents.AFTER_DEATH / ALLOW_DEATH</code>：记录死亡点、鞘翅保留；</li>
+    <li><code>ServerPlayerEvents.COPY_FROM / AFTER_RESPAWN</code>：跨维度保留数据并归还鞘翅；</li>
+    <li><code>ServerPlayConnectionEvents.JOIN / DISCONNECT</code>：账号初始化、发菜单书、队伍诊断；</li>
+    <li><code>ServerTickEvents.END_SERVER_TICK</code>：悬赏进度、HUD 推送、头衔刷新、清理任务；</li>
+    <li><code>UseItemCallback</code>：右键「筛界菜单」书打开菜单；</li>
+    <li><code>ServerMessageEvents.ALLOW_CHAT_MESSAGE</code>：聊天输入状态机拦截；</li>
+    <li><code>ServerLifecycleEvents.SERVER_STARTED</code>：清理自由市场过期单、加载自定义菜单、固定 keepInventory；</li>
+    <li><code>ServerLifecycleEvents.SERVER_STOPPING</code>：保存 <code>MenuData</code>。</li>
+  </ul>
+
+  <h2 id="features"><span class="num">04</span>功能实现详解</h2>
+
+  <h3 id="menu-core">4.1 菜单框架</h3>
+  <p><strong>页面枚举</strong>：<code>MenuManager.Page</code> 列出所有内置页面（MAIN、HOMES、DEATHS、RANDOM、PLAYERS、PARTY、GLOBAL_MARKET、FREE_MARKET、BOUNTY、TITLES、MAILBOX、ADMIN_* 等），新增的 <code>CUSTOM</code> 用于配置驱动的独立页面。</p>
+  <p><strong>三个核心方法</strong>：</p>
+  <ul>
+    <li><code>title(Page, pageIndex, customId)</code>：把页面映射成标题（switch 表达式，必须穷举所有枚举值）；</li>
+    <li><code>build(container, player, page, pageIndex, category, customId)</code>：按页面填充 54 个槽位。最后统一调用 <code>CustomMenus.applyOverlay</code>，所以自定义按钮可以覆盖同槽位的内置按钮；</li>
+    <li><code>handleClick(container, player, slot, rightClick)</code>：处理点击。开头先交给 <code>CustomMenus</code>，再进入内置页面分支。</li>
+  </ul>
+  <p><strong>分页</strong>：列表类页面使用 <code>pageIndex</code> 与 <code>setPage()</code>；翻页会重新 <code>fill()</code>（铺灰色玻璃板）+ <code>build()</code> + <code>broadcastChanges()</code>。固定布局常量如 <code>GRID_COLUMNS=7</code>、<code>PUBLIC_PER_PAGE=27</code> 都在类顶部。</p>
+  <div class="warn">
+    <b>改动提示</b>
+    往 <code>Page</code> 里加值会让 <code>title()</code> 的 switch 表达式失去穷举性而编译失败，这是刻意的：编译器会强制你补上标题，避免新页面显示空白。
+  </div>
+
+  <h3 id="homes">4.2 家与传送点</h3>
+  <p><strong>家的数据</strong>：<code>MenuData.Home</code> 保存名称、坐标、朝向、维度、是否公共、是否精品、上架时间。每个玩家最多 64 个，名称不区分大小写去重；<code>sift:lobby</code> 维度禁止创建。</p>
+  <p><strong>创建</strong>：菜单按钮记录当前位置，然后通过 <code>ChatInput.requestHome</code> 在聊天栏输入名称；聊天事件被拦截后写入 <code>homes</code>。</p>
+  <p><strong>公共传送点</strong>：右键自己的家设为公共，公共点会出现在「世界传送」页（<code>publicHomes()</code>），床的图标变为青色并带附魔光效。公共点只允许主世界（<code>unpublishPublicHomesOutside</code> 可批量清理）。</p>
+  <p><strong>精品传送点</strong>：只有公共点可以上架，全服 7 个槽位（主菜单 <code>19–25</code>）。上架 2000 金币、取消退 1000 金币；任何人传送一次，归属者得 100 金币；同一访客对同一发布者累计收益封顶 500 金币（<code>premiumContrib</code> 记录）。</p>
+  <p><strong>冷却</strong>：家传送 3 分钟、公共点 3 分钟、随机传送 5 分钟、大厅 5 分钟；Bingo 服随机 10 分钟、玩家传送 5 分钟。冷却表是 <code>Map&lt;UUID, Long&gt;</code>，重启即清空。</p>
+
+  <h3 id="deaths">4.3 死亡地点</h3>
+  <p><code>ServerLivingEntityEvents.AFTER_DEATH</code> 在玩家死亡时把坐标、维度、时间写入 <code>MenuData.deaths</code>，保留最近 5 条。菜单页按时间倒序渲染，点击直接传送（无费用、无冷却）。死亡记录只有本人可见。</p>
+
+  <h3 id="random">4.4 随机传送</h3>
+  <p><code>randomTeleport</code> 以玩家为中心在 ±5000 格内取随机 X/Z，用 <code>Heightmap.Types.MOTION_BLOCKING_NO_LEAVES</code> 找地表，拒绝液体与危险方块后落点。目的维度由 <code>levelOf</code> 决定；失败会重试若干次，仍失败则退回原坐标提示。</p>
+  <p>「主城大厅传送」会记录进入前的坐标（<code>TeleportRequestManager.recordLobbyReturn</code>），「离开主城大厅」时回到该点。</p>
+
+  <h3 id="players">4.5 玩家之间传送</h3>
+  <p><code>TeleportRequestManager</code> 维护待处理请求（按目标玩家 UUID）。左键是「我过去」，右键是「你过来」。请求以聊天可点击按钮（<code>/siftmenu teleport accept|deny &lt;player&gt;</code>）或菜单操作确认，双方同意后才执行 <code>teleportTo</code>。请求有过期时间，接受后立即移除，避免重复传送。</p>
+
+  <h3 id="party">4.6 队伍</h3>
+  <p><code>PartyManager</code> 负责邀请、接受、拒绝、踢人、转让队长、退出、解散与 PvP 开关；<code>MenuData.Party</code> 存成员列表、队长与创建时间，<code>playerParty</code> 维护玩家 → 队伍索引。队伍界面把「成员管理」交给 FTB Teams：服务端关闭当前容器后发送 <code>OpenFtbPayload("teams")</code>，客户端调用 FTB Teams 的 <code>OpenGUIMessage</code>。PvP 开关通过队伍分数板队伍（scoreboard team）设置友伤规则。</p>
+
+  <h3 id="global-market">4.7 全球经济（服务器买卖）</h3>
+  <p><strong>默认目录</strong>：只内置原版物品示例（种子、作物、畜牧产品、建筑方块、矿物与基础资源），开箱即用；不再包含任何模组或服务器专属条目。管理员可以在后台按物品 ID 添加条目并设置价格与额度。</p>
+  <p><strong>价格</strong>：每个收购项有基础价与每日额度（全服 + 个人）。实际收购价 = 基础价 × 市场压力 × 7 日成交量修正；集中抛售会压低价格，停止抛售后约 8 小时恢复六成（<code>buyPressure</code> / <code>buyVolume7d</code>）。</p>
+  <p><strong>交易</strong>：购买直接从市场扣款并给物品；收购从背包扣除物品并加钱，同时写 <code>dailySold</code>、<code>dailySpent</code>、<code>dailyTax</code> 等统计。每日 0 点 <code>MenuData.dailyReset()</code> 清空额度并结算。</p>
+  <p><strong>管理员</strong>：后台 26 号位经济面板展示总金币、今日产出/回收/税收/挂单费、有效挂单；可增删物品、改价格与额度（<code>sellAdmin</code> / <code>buyAdmin</code> / <code>removedSell</code> / <code>removedBuy</code>）。</p>
+
+  <h3 id="free-market">4.8 自由市场（玩家挂单）</h3>
+  <table>
+    <thead><tr><th>规则</th><th>数值 / 实现</th></tr></thead>
+    <tbody>
+      <tr><td>挂单费</td><td>10.00 金币/单，发布即扣，不退还</td></tr>
+      <tr><td>成交税</td><td>5%，单笔总价低于 200.00 金币免税，从卖家所得扣除</td></tr>
+      <tr><td>挂单时长</td><td>7 天，过期由 <code>cleanup()</code> 清理</td></tr>
+      <tr><td>数量上限</td><td>出售 576，收购 64000；单价上限 100000.00 金币</td></tr>
+      <tr><td>收购托管</td><td>发布收购时冻结 <code>单价 × 数量</code>，成交后释放给卖家</td></tr>
+      <tr><td>背包满</td><td>物品进入 <code>pendingItems</code>，在「待领取物品」页领取</td></tr>
+    </tbody>
+  </table>
+  <p>挂单用 <code>MenuData.MarketListing</code> 持久化（含物品 NBT 字符串、数量、单价、创建/过期时间）。购买时先校验余量、再扣款、再发货；收购成交时从卖家背包扣除物品并支付托管金币。所有失败路径都会给出明确聊天提示。</p>
+
+  <h3 id="bounty">4.9 悬赏任务</h3>
+  <p><strong>悬赏定义</strong>：<code>BountyCatalog</code> 内置任务池（采集、击杀、探索、进度类），包含难度、目标、奖励与是否为「极限」。每天 0 点 <code>ensureBoard</code> 从池中抽取 56 个生成当日悬赏板。</p>
+  <p><strong>接取限制</strong>：每人每天最多 5 个，其中极限悬赏最多 2 个（<code>bountyDailyCount</code> / <code>bountyDailyExtreme</code>）。</p>
+  <p><strong>进度</strong>：<code>BountyService.tick</code> 与 <code>tickAdvancements</code> 周期性检查击杀、成就、统计与位置；进度写入 <code>bountyProgress</code>。完成目标后在菜单里点击领取，金币直接入账。</p>
+  <p><strong>HUD</strong>：服务端每 tick 组装 <code>BountyHudPayload</code>（最多若干条进行中任务），客户端 <code>BountyHudPanel</code> 渲染在屏幕右侧并支持点击打开详情。</p>
+
+  <h3 id="titles">4.10 头衔系统</h3>
+  <p><code>Titles.DEFS</code> 是静态头衔表：id、显示名、颜色、解锁成就、说明、是否自定义。解锁条件是原版进度（<code>unlocked()</code> 检查 <code>ServerPlayer.getAdvancements()</code>）；自定义文本限制 1–12 字符，颜色支持 purple / blue / rainbow / red（红色仅管理员）。</p>
+  <p>佩戴后通过分数板队伍前缀显示在聊天与头顶：<code>refreshName()</code> 在登录与切换头衔时重建队伍，<code>tickNames()</code> 周期性刷新彩虹色。菜单里可预览、佩戴、清除与修改颜色。</p>
+
+  <h3 id="mailbox">4.11 邮箱与补偿</h3>
+  <p><code>Mailbox</code> 支持两类邮件：</p>
+  <ul>
+    <li><strong>公告</strong>：发送给全服或指定玩家，纯文本；</li>
+    <li><strong>补偿</strong>：附带物品（支持多个），玩家点击领取后进入背包，背包满则进入待领取列表。</li>
+  </ul>
+  <p>每封邮件有 <code>id</code>、标题、正文、发送者、创建时间、收件人列表（UUID 与名字快照）。<code>mailRead</code> / <code>mailClaimed</code> 按玩家记录，主菜单「邮箱」显示未读/未领取数量。管理员命令：<code>/siftmenu mail announce &lt;文本&gt;</code> 与 <code>/siftmenu mail compensate &lt;物品&gt; &lt;数量&gt;</code>，发送前会校验物品与权限。</p>
+
+  <h3 id="bingo">4.12 Bingo 联动</h3>
+  <p>模组通过 <code>FabricLoader.isModLoaded</code> 判断是否为 Bingo 服（同时要求服务端环境）。<code>BingoHook</code> 用 <code>Class.forName</code> 反射订阅 Bingo 的 <code>BingoEvents</code>，避免在普通服加载 Bingo 类导致崩溃；对局结束时按队伍分数判定名次，记录胜者。</p>
+  <p>胜者获得 1000 金币，但金币属于主服：<code>BingoReward</code> 生成带 HMAC 签名的令牌，经 <code>BingoWinPayload</code> 下发给客户端缓存；玩家转回主服后客户端自动发送 <code>BingoClaimPayload</code>，主服验签并按令牌去重发奖（<code>bingoClaims</code>）。</p>
+
+  <h3 id="chat-input">4.13 聊天输入</h3>
+  <p>原版箱子界面无法输入文字，因此 <code>ChatInput</code> 用「挂起任务」模式：菜单点击时记录 <code>Pending(type, key, itemData)</code>，关闭容器并提示玩家在聊天栏输入；<code>ServerMessageEvents.ALLOW_CHAT_MESSAGE</code> 拦截下一条消息，解析成功后执行对应操作（创建家、队伍名、挂单价格/数量、头衔文本、公告、后台改价等），失败会提示并允许重试；输入 <code>cancel</code> 可取消。</p>
+
+  <h3 id="lobby">4.14 主城大厅</h3>
+  <p>大厅是独立维度 <code>sift:lobby</code>。三个守卫类分别处理：</p>
+  <ul>
+    <li><code>LobbyBuildGuard</code>：阻止放置/破坏方块与容器交互（带冷却提示，避免刷屏）；</li>
+    <li><code>LobbyMobGuard</code>：实体进入大厅时清除或阻止生成；</li>
+    <li><code>LobbySpawnGuard</code>：把误入大厅边界的玩家拉回安全点；</li>
+    <li><code>LobbyTimeSync</code>：把大厅世界时钟同步为固定时间，保证永远是白天/固定氛围。</li>
+  </ul>
+
+  <h3 id="maintenance">4.15 性能与维护</h3>
+  <ul>
+    <li><code>ChunkUnloadManager</code>：周期性扫描被强制加载的区块票据，清理远离玩家且无意义的区块，降低内存与 tick 开销；</li>
+    <li><code>CleanupManager</code>：定时清理掉落物并广播结果，防止实体堆积；</li>
+    <li><code>SleepSkip</code>：统计睡觉人数，达到比例后直接跳到白天并广播；</li>
+    <li><code>AnvilUnseal</code>：解除铁砧对「已封印/损坏」物品的限制（配合整合包机制）。</li>
+  </ul>
+
+  <h3 id="mixins">4.16 兼容修复 Mixin</h3>
+  <table>
+    <thead><tr><th>Mixin</th><th>目标</th><th>作用</th></tr></thead>
+    <tbody>
+      <tr><td><code>ItemPickupMixin</code></td><td><code>LivingEntity</code></td><td>拾取统计（悬赏进度）</td></tr>
+      <tr><td><code>ItemCraftedMixin</code></td><td><code>Item</code></td><td>合成统计</td></tr>
+      <tr><td><code>FurnaceSmeltProgressMixin</code></td><td><code>AbstractFurnaceBlockEntity</code></td><td>熔炼统计</td></tr>
+      <tr><td><code>FishingHookMixin</code></td><td><code>FishingHook</code></td><td>钓鱼统计</td></tr>
+      <tr><td><code>AnimalBreedMixin</code> / <code>TameAnimalTriggerMixin</code></td><td><code>Animal</code> / <code>TameAnimalTrigger</code></td><td>繁殖与驯服统计</td></tr>
+      <tr><td><code>ExperienceGainMixin</code></td><td><code>Player</code></td><td>经验获取统计</td></tr>
+      <tr><td><code>BlockItemPlaceMixin</code></td><td><code>BlockItem</code></td><td>大厅放置拦截</td></tr>
+      <tr><td><code>AnvilMenuMixin</code> / <code>EnchantmentMenuMixin</code></td><td><code>AnvilMenu</code> / <code>EnchantmentMenu</code></td><td>配合铁砧解封与附魔统计</td></tr>
+      <tr><td><code>WanderingTraderDataMixin</code></td><td><code>WanderingTraderData</code></td><td>修复流浪商人数据</td></tr>
+      <tr><td><code>EntityPortalTicketMixin</code></td><td><code>Entity</code></td><td>实体传送门票据修正</td></tr>
+      <tr><td><code>TwilightExanimateEssenceFixMixin</code></td><td>暮色森林物品</td><td>修复精华物品异常</td></tr>
+      <tr><td><code>client.AnvilScreenMixin</code></td><td><code>AnvilScreen</code></td><td>铁砧界面解锁显示</td></tr>
+      <tr><td><code>client.ItemModelResolverMixin</code></td><td><code>ItemModelResolver</code></td><td>自定义物品模型兼容</td></tr>
+      <tr><td><code>client.PrinterInteractMixin</code></td><td>投影打印机交互</td><td>兼容打印模组</td></tr>
+      <tr><td><code>client.VehicleInterpolationMixin</code></td><td>载具插值</td><td>修复载具视角抖动</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <b>按需启用</b>
+    兼容修复类 mixin 分散在 <code>siftprinterfix</code>、<code>siftaircraftfix</code>、<code>sifttwilightfix</code> 三个配置里，<code>required=false</code>、<code>defaultRequire=0</code>，目标模组不存在时不会报错。
+  </div>
+
+  <h3 id="client">4.17 客户端功能</h3>
+  <p><code>SiftMenuClient</code> 注册按键与网络接收：</p>
+  <ul>
+    <li><kbd>G</kbd>（GLFW 71）打开菜单，按住 <kbd>Ctrl</kbd> 时不触发，避免与复制等操作冲突；</li>
+    <li>接收 <code>BountyHudPayload</code> 更新悬赏 HUD；删除实体/切服时重置；</li>
+    <li>缓存 Bingo 胜利令牌，进入主服后自动领取；</li>
+    <li>接收 <code>OpenFtbPayload</code> 打开 FTB Teams；</li>
+    <li><code>TeamClientDiag</code> 周期性上报队伍同步状态。</li>
+  </ul>
+
+  <h2 id="custom-menu"><span class="num">05</span>自定义菜单（JSON 驱动）</h2>
+  <p class="lead">这是 1.22.0 新增的能力：管理员可以只改 <code>config/siftmenu/menus.json</code>，就新增页面、修改按钮文案与图标、在内置页面上加按钮，并在不重启服务器的情况下热重载。</p>
+
+  <h3 id="custom-schema">配置结构</h3>
+  <p>文件位置：<code>&lt;服务端根目录&gt;/config/siftmenu/menus.json</code>。首次加载且文件不存在时，模组会自动生成空配置。</p>
+<pre><code>{
+  "schema": 1,
+  "pages": [
+    {
+      "id": "guide",                 // 必填：页面唯一 id
+      "title": "&amp;6服务器指南",        // 独立页面的标题（支持颜色代码）
+      "base": "CUSTOM",              // CUSTOM = 独立页面；其他值 = 叠加到内置页
+      "permission": "all",           // all | admin（整页权限）
+      "allPages": false,             // 叠加时是否对所有分页生效
+      "pageIndex": 0,                // 叠加到内置页的第几页（默认 0）
+      "items": [
+        {
+          "slot": 13,                // 必填：0-53
+          "item": "minecraft:diamond",
+          "count": 1,                // 可选：1-64
+          "name": "&amp;b自定义按钮",
+          "lore": ["&amp;7第一行", "&amp;7第二行"],
+          "glint": true,             // 是否附魔光效
+          "permission": "all",       // 单个按钮权限
+          "pageIndex": 0,            // 可选：覆盖页面的 pageIndex
+          "left":  { "type": "open", "page": "rules" },
+          "right": { "type": "message", "text": "&amp;a右键你好" }
+        }
+      ]
+    }
+  ]
+}</code></pre>
+
+  <h4>顶层字段</h4>
+  <table>
+    <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>schema</code></td><td>int</td><td>配置版本，当前为 1</td></tr>
+      <tr><td><code>pages</code></td><td>array</td><td>页面列表</td></tr>
+    </tbody>
+  </table>
+
+  <h4>页面字段</h4>
+  <table>
+    <thead><tr><th>字段</th><th>必填</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>是</td><td>唯一标识；独立页面可用 <code>open</code> 动作打开</td></tr>
+      <tr><td><code>title</code></td><td>否</td><td>标题，支持 <code>&amp;0</code>–<code>&amp;f</code>、<code>&amp;k</code>–<code>&amp;o</code>、<code>&amp;r</code></td></tr>
+      <tr><td><code>base</code></td><td>否</td><td><code>CUSTOM</code>（默认）或内置页名：<code>MAIN</code>、<code>HOMES</code>、<code>RANDOM</code>、<code>GLOBAL_MARKET</code> 等</td></tr>
+      <tr><td><code>permission</code></td><td>否</td><td><code>admin</code> 时整页仅管理员可见</td></tr>
+      <tr><td><code>allPages</code></td><td>否</td><td>叠加到分页页面时是否每页都显示</td></tr>
+      <tr><td><code>pageIndex</code></td><td>否</td><td>叠加的页码，默认 0</td></tr>
+      <tr><td><code>items</code></td><td>否</td><td>按钮列表</td></tr>
+    </tbody>
+  </table>
+
+  <h4>按钮字段</h4>
+  <table>
+    <thead><tr><th>字段</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>slot</code></td><td>0–53（第一行 0–8，最后一行 45–53）</td></tr>
+      <tr><td><code>item</code></td><td>物品 id，如 <code>minecraft:compass</code>；无效 id 会被跳过并写日志</td></tr>
+      <tr><td><code>count</code></td><td>1–64，默认 1</td></tr>
+      <tr><td><code>name</code> / <code>lore</code></td><td>显示名与说明，支持颜色代码；lore 为字符串数组</td></tr>
+      <tr><td><code>glint</code></td><td>附魔光效</td></tr>
+      <tr><td><code>permission</code></td><td>单按钮权限，<code>admin</code> 时非管理员看不到、点不到</td></tr>
+      <tr><td><code>pageIndex</code></td><td>可选，覆盖页面的分页条件</td></tr>
+      <tr><td><code>left</code> / <code>right</code></td><td>左键 / 右键动作；Shift+点击按右键动作处理</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="custom-actions">动作类型</h3>
+  <table>
+    <thead><tr><th><code>type</code></th><th>字段</th><th>效果</th></tr></thead>
+    <tbody>
+      <tr><td><code>open</code></td><td><code>page</code></td><td>打开自定义页面 id，或内置页名（<code>MAIN</code>、<code>HOMES</code>…）</td></tr>
+      <tr><td><code>command</code></td><td><code>command</code>、<code>as</code></td><td>执行命令；<code>as=player</code>（默认）以玩家身份，<code>as=console</code> 以控制台身份（需要管理员）</td></tr>
+      <tr><td><code>message</code></td><td><code>text</code></td><td>给点击者发送一条系统消息（支持颜色）</td></tr>
+      <tr><td><code>transfer</code></td><td><code>host</code>、<code>port</code></td><td>把玩家转移到指定服务器（默认端口 25565）</td></tr>
+      <tr><td><code>close</code></td><td>—</td><td>关闭当前菜单</td></tr>
+      <tr><td><code>main</code> / <code>back</code></td><td>—</td><td>返回主菜单</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip">
+    <b>独立页面的默认导航</b>
+    独立页面会自动在 45 号槽放「返回主菜单」、49 号槽放「关闭」。如果配置里在同一槽位放了按钮，则以配置为准。
+  </div>
+
+  <h3 id="custom-rules">覆盖规则、权限与热重载</h3>
+  <ol>
+    <li><strong>渲染顺序</strong>：先渲染内置页面，再叠加所有 <code>base</code> 相同的配置按钮。所以同槽位会覆盖内置按钮，点击时也会优先执行自定义动作。</li>
+    <li><strong>分页</strong>：叠加默认只作用于第 0 页；需要每页都显示时设 <code>"allPages": true</code>。</li>
+    <li><strong>权限</strong>：<code>permission: "admin"</code> 基于 <code>COMMANDS_GAMEMASTER</code>（OP 2 级）。管理员按钮对普通玩家完全不渲染；<code>as: console</code> 还会二次校验，防止提权。</li>
+    <li><strong>校验与容错</strong>：缺 id、槽位越界、物品 id 无效、id 重复都会被跳过并写入日志；解析失败时继续使用上一份可用配置。</li>
+    <li><strong>热重载</strong>：<code>/siftmenu menu reload</code>；<code>/siftmenu menu list</code> 查看已加载页面；<code>/siftmenu menu open &lt;id&gt;</code> 直接打开。</li>
+  </ol>
+
+  <h4>完整示例</h4>
+  <p>仓库提供了可直接使用的示例：<code>docs/examples/menus.example.json</code>。它包含：</p>
+  <ul>
+    <li>独立页面 <code>guide</code>（指南）与 <code>rules</code>（规则），互相跳转；</li>
+    <li>在 <code>MAIN</code> 第 15 槽位添加「服务器指南」入口；</li>
+    <li>管理员按钮、消息动作、跨服转移动作与命令动作。</li>
+  </ul>
+<pre><code>{
+  "schema": 1,
+  "pages": [
+    {
+      "id": "main-guide-button",
+      "base": "MAIN",
+      "pageIndex": 0,
+      "items": [
+        {
+          "slot": 15,
+          "item": "minecraft:knowledge_book",
+          "name": "&amp;a服务器指南",
+          "lore": ["&amp;7点击查看规则与玩法"],
+          "left": { "type": "open", "page": "guide" }
+        }
+      ]
+    }
+  ]
+}</code></pre>
+
+  <div class="warn">
+    <b>避免踩坑</b>
+    <ul style="margin:6px 0 0">
+      <li>颜色代码用 <code>&amp;</code>，不要用 <code>§</code>（JSON 里也可以，但不便于编辑）。</li>
+      <li>不要在 JSON 里写注释；示例里的注释仅用于文档说明。</li>
+      <li>自定义页面固定 6 行、无分页；需要分页请改造 <code>CustomMenus</code>（见下一节）。</li>
+      <li>动态页面（市场、悬赏列表）的数据由代码生成，配置只能加按钮，不能替换列表内容。</li>
+    </ul>
+  </div>
+
+  <h2 id="develop"><span class="num">06</span>二次开发指南</h2>
+
+  <h3>6.1 新增一个内置页面</h3>
+  <ol>
+    <li>在 <code>MenuManager.Page</code> 里加枚举值，例如 <code>EVENTS</code>。</li>
+    <li>在 <code>title()</code> 的 switch 里补 <code>case EVENTS</code>（否则编译失败）。</li>
+    <li>在 <code>build()</code> 的 switch 里补 <code>case EVENTS:</code>，用 <code>button(...)</code> / <code>head(...)</code> / <code>marketItem(...)</code> 放按钮。</li>
+    <li>在 <code>handleClick()</code> 里补点击逻辑；分页页面调用 <code>setPage()</code>。</li>
+    <li>在主菜单的 <code>case MAIN</code> 里加入口按钮。</li>
+  </ol>
+
+  <h3>6.2 新增一个点击行为</h3>
+  <pre><code>case EVENTS:
+   switch (var2) {
+      case 22 -&gt; {
+         var1.closeContainer();
+         var0.setPage(0);        // 或执行传送、发消息等
+      }
+      case 45 -&gt; open(var1, MenuManager.Page.MAIN, 0);
+   }
+   break;</code></pre>
+  <p>注意：<code>handleClick</code> 的 <code>var2</code> 是槽位，<code>var3</code> 表示右键。所有修改须在主线程执行；异步任务请用 <code>server.execute(...)</code>。</p>
+
+  <h3>6.3 新增持久化字段</h3>
+  <ol>
+    <li>在 <code>MenuData</code> 加字段（建议给默认值）。</li>
+    <li>在 <code>normalize()</code> 里补空值判断，兼容旧存档。</li>
+    <li>写操作后调用 <code>save()</code>；批量写时合并保存，避免频繁 IO。</li>
+    <li>如果涉及经济单位，遵循「内部用分、显示用金币」：读写都经过 <code>Money</code> / <code>Economy</code>。</li>
+  </ol>
+
+  <h3>6.4 新增网络包</h3>
+  <ol>
+    <li>新建 record，实现 <code>CustomPacketPayload</code> 与 <code>StreamCodec</code>（参考 <code>BountyHudPayload</code>）。</li>
+    <li>在 <code>SiftMenu.onInitialize</code> 里 <code>PayloadTypeRegistry</code> 注册，并注册接收器。</li>
+    <li>客户端在 <code>SiftMenuClient.onInitializeClient</code> 注册接收器，并用 <code>client.execute(...)</code> 切回客户端线程。</li>
+    <li>所有 <code>ServerPlayer</code> 操作都要在服务端线程执行。</li>
+  </ol>
+
+  <h3>6.5 扩展自定义菜单动作</h3>
+  <p>在 <code>CustomMenus.runAction</code> 的 switch 里加分支，并在 <code>ActionDef</code> 加配置字段。例如新增 <code>sound</code> 动作：</p>
+  <pre><code>case "sound" -&gt; player.playNotifySound(
+   BuiltInRegistries.SOUND_EVENT... , SoundSource.MASTER, 1f, 1f
+);</code></pre>
+  <p>同时更新 <code>docs/index.html</code> 的动作表，保持文档与代码一致。</p>
+
+  <h3>6.6 代码约定</h3>
+  <ul>
+    <li>包名固定 <code>com.echoes.siftmenu</code>；客户端代码放 <code>client</code> 子包。</li>
+    <li>面向玩家的文本使用中文；日志使用 <code>SiftMenu.LOGGER</code>，前缀 <code>[siftmenu]</code>。</li>
+    <li>不要硬引用可选模组的类；用 <code>FabricLoader.isModLoaded</code> + 反射（参考 <code>BingoHook</code>）。</li>
+    <li>菜单里所有「可点击」的说明要写清楚左键 / 右键 / Shift 的行为。</li>
+  </ul>
+
+  <h2 id="build"><span class="num">07</span>构建</h2>
+  <p>本项目不使用 Gradle：源码是面向 Minecraft 26.3 的 patched jar 直接编译。构建脚本 <code>build.ps1</code> 会自动解包 Fabric API 子模块、收集 classpath、编译并打包。</p>
+
+  <h3>依赖</h3>
+  <ul>
+    <li>JDK 25（<code>javac</code> 必须支持 <code>--release 25</code>）；</li>
+    <li>access-widener 处理后的 Minecraft jar（<code>mc-26.3-aw.jar</code>）；</li>
+    <li><code>%APPDATA%\.minecraft\libraries</code>；</li>
+    <li>一个包含 <code>fabric-api</code> 与联动模组的 <code>mods</code> 目录（Bingo、FTB、Ultramarine 等编译期依赖）。</li>
+  </ul>
+
+  <h3>命令</h3>
+<pre><code># 最小用法（把依赖 jar 放到 lib/mc-26.3-aw.jar）
+.\build.ps1
+
+# 显式指定路径
+.\build.ps1 `
+  -McJar "C:\path\to\mc-26.3-aw.jar" `
+  -ModsDir "D:\...\mods" `
+  -Libraries "$env:APPDATA\.minecraft\libraries" `
+  -JavaHome "C:\Program Files\Java\jdk-25"</code></pre>
+
+  <table>
+    <thead><tr><th>参数</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>-McJar</code></td><td>patched Minecraft jar；也可放进 <code>lib/mc-26.3-aw.jar</code></td></tr>
+      <tr><td><code>-ModsDir</code></td><td>包含 fabric-api 与联动模组的目录</td></tr>
+      <tr><td><code>-Libraries</code></td><td>Minecraft 依赖库目录，默认 <code>%APPDATA%\.minecraft\libraries</code></td></tr>
+      <tr><td><code>-JavaHome</code></td><td>JDK 25 根目录；脚本会校验 <code>javac 25</code></td></tr>
+    </tbody>
+  </table>
+
+  <p>产物：<code>build/siftmenu-1.22.1.jar</code>（源码 + 资源 + class，版本号取自 <code>fabric.mod.json</code>）。</p>
+
+  <h3>打包结构</h3>
+  <ul>
+    <li><code>src/main/java</code>：61 个 Java 源文件；</li>
+    <li><code>src/main/resources</code>：<code>fabric.mod.json</code>、四个 mixin 配置与语言文件；</li>
+    <li>输出 jar 根目录必须直接包含 <code>fabric.mod.json</code>（脚本已处理）。</li>
+  </ul>
+
+  <h2 id="deploy"><span class="num">08</span>部署</h2>
+
+  <h3>部署模组</h3>
+  <ol>
+    <li>把 <code>build/siftmenu-1.22.1.jar</code> 复制到服务器 <code>mods/</code>；</li>
+    <li>删除旧版 <code>siftmenu-*.jar</code>，避免重复加载；</li>
+    <li>重启服务器，确认日志出现 <code>[siftmenu] 自定义菜单已加载</code>；</li>
+    <li>进服执行 <code>/siftmenu</code> 验证主菜单；管理员执行 <code>/siftmenu menu reload</code>。</li>
+  </ol>
+  <div class="note">
+    <b>配置目录</b>
+    服务端：<code>config/siftmenu-data.json</code>、<code>config/siftmenu/menus.json</code>。迁移服务器时一并备份。
+  </div>
+
+  <h2 id="faq"><span class="num">09</span>常见问题</h2>
+
+  <h4>改了 menus.json 没生效？</h4>
+  <p>执行 <code>/siftmenu menu reload</code>；确认页面 <code>id</code> 唯一、按钮槽位在 0–53、物品 id 正确。重载失败时旧配置会继续生效，检查服务端日志里的 <code>[siftmenu]</code> 警告。</p>
+
+  <h4>为什么自定义按钮点不动？</h4>
+  <p>按钮需要配置 <code>left</code> 或 <code>right</code> 动作；只有 <code>name</code>/<code>lore</code> 的按钮是纯展示。若按钮是 <code>admin</code> 权限而你不是管理员，也点不到。</p>
+
+  <h4>能用自定义页面替换市场列表吗？</h4>
+  <p>不能。市场、悬赏、邮箱列表由代码动态生成；自定义页面适合公告、规则、导航、活动入口等静态内容。</p>
+
+  <h4>服务器没有装 Bingo / FTB 会崩吗？</h4>
+  <p>不会。Bingo 通过反射与 <code>isModLoaded</code> 检测；FTB Teams 相关代码在客户端点击队伍管理时才会用到，缺少模组时该入口不可用。</p>
+
+  <h4>金币显示为什么有两位小数？</h4>
+  <p>内部以「分」为整数存储（1 金币 = 100 分），显示与输入都按两位小数格式化，避免浮点误差。旧存档首次加载会自动 ×100 迁移。</p>
+
+  <h4>如何只让管理员看到某个自定义页面？</h4>
+  <p>页面设置 <code>"permission": "admin"</code>；按钮也可以单独设置。控制台身份执行命令的按钮必须有管理员权限。</p>
+
+  <h2 id="license"><span class="num">10</span>许可与贡献</h2>
+  <p>本项目使用 MIT License，可自由用于整合包、服务器与二次开发，保留版权声明即可。</p>
+  <ul>
+    <li>提交前请保证 <code>.\build.ps1</code> 能通过；</li>
+    <li>新增或修改玩家可见行为时，同步更新本页文档与 <code>docs/examples/menus.example.json</code>；</li>
+    <li>涉及数据结构的改动必须提供 <code>normalize()</code> 兼容逻辑与迁移说明；</li>
+    <li>不要提交 <code>build/</code>、本地配置、服务器存档或密钥。</li>
+  </ul>
+
+  <footer>
+    Sift Menu v1.22.1 · 文档随代码仓库发布 · 最后更新：2026-11-24
+  </footer>
+
+</article>
+</main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('#nav a'));
+  var sections = links.map(function (a) {
+    return document.getElementById(a.getAttribute('href').slice(1));
+  }).filter(Boolean);
+
+  function activate(id) {
+    links.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+    });
+  }
+
+  var raf = 0;
+  function updateActive() {
+    raf = 0;
+    if (!sections.length) return;
+    var line = window.scrollY + 96;
+    var current = sections[0].id;
+    sections.forEach(function (section) {
+      if (section.offsetTop <= line) {
+        current = section.id;
+      }
+    });
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+      current = sections[sections.length - 1].id;
+    }
+    activate(current);
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!raf) {
+      raf = window.requestAnimationFrame(updateActive);
+    }
+  }, { passive: true });
+  window.addEventListener('resize', updateActive);
+
+  links.forEach(function (a) {
+    a.addEventListener('click', function () {
+      activate(a.getAttribute('href').slice(1));
+      var sidebar = document.getElementById('sidebar');
+      if (window.innerWidth <= 960) {
+        sidebar.classList.remove('open');
+      }
+    });
+  });
+
+  var btn = document.getElementById('menuBtn');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+  }
+
+  updateActive();
+})();
+</script>
+</body>
+</html>

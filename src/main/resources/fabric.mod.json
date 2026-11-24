@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"id": "siftmenu",
+	"version": "1.22.1",
+	"name": "Sift Menu",
+	"description": "筛界服务器菜单模组：家、死亡点、随机传送、玩家传送、队伍、经济市场与数据驱动的自定义菜单页面。",
+	"authors": [
+		"Echoes"
+	],
+	"license": "MIT",
+	"environment": "*",
+	"mixins": [
+		"siftmenu.mixins.json",
+		"siftprinterfix.mixins.json",
+		"siftaircraftfix.mixins.json",
+		"sifttwilightfix.mixins.json"
+	],
+	"entrypoints": {
+		"main": [
+			"com.echoes.siftmenu.SiftMenu"
+		],
+		"client": [
+			"com.echoes.siftmenu.client.SiftMenuClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

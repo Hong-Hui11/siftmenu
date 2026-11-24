@@ -1,0 +1,11 @@
+{
+	"required": false,
+	"package": "com.echoes.siftmenu.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"TwilightExanimateEssenceFixMixin"
+	],
+	"injectors": {
+		"defaultRequire": 0
+	}
+}

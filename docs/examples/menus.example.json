@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "pages": [
+    {
+      "id": "guide",
+      "title": "&6服务器指南",
+      "base": "CUSTOM",
+      "permission": "all",
+      "items": [
+        {
+          "slot": 4,
+          "item": "minecraft:written_book",
+          "name": "&e欢迎来到筛界",
+          "lore": [
+            "&7左键：查看规则",
+            "&7右键：领取新手提示"
+          ],
+          "glint": true,
+          "left": { "type": "open", "page": "rules" },
+          "right": { "type": "message", "text": "&a按 G 键可以随时打开菜单。" }
+        },
+        {
+          "slot": 20,
+          "item": "minecraft:compass",
+          "name": "&b回到主菜单",
+          "lore": ["&7点击返回"],
+          "left": { "type": "main" }
+        },
+        {
+          "slot": 24,
+          "item": "minecraft:gold_ingot",
+          "name": "&6赞助服务器",
+          "lore": ["&7前往赞助页面"],
+          "left": { "type": "transfer", "host": "play.example.com", "port": 25565 }
+        },
+        {
+          "slot": 40,
+          "item": "minecraft:command_block",
+          "name": "&c管理员：刷新数据",
+          "permission": "admin",
+          "lore": ["&7仅管理员可见"],
+          "left": { "type": "command", "as": "player", "command": "siftmenu menu reload" }
+        }
+      ]
+    },
+    {
+      "id": "rules",
+      "title": "&c服务器规则",
+      "base": "CUSTOM",
+      "items": [
+        {
+          "slot": 22,
+          "item": "minecraft:paper",
+          "name": "&f规则正文",
+          "lore": [
+            "&71. 禁止使用作弊客户端",
+            "&72. 尊重其他玩家",
+            "&73. 禁止恶意刷经济"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "main-guide-button",
+      "base": "MAIN",
+      "pageIndex": 0,
+      "items": [
+        {
+          "slot": 15,
+          "item": "minecraft:knowledge_book",
+          "name": "&a服务器指南",
+          "lore": ["&7点击查看规则与玩法"],
+          "left": { "type": "open", "page": "guide" }
+        }
+      ]
+    }
+  ]
+}

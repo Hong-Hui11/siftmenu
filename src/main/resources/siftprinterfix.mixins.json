@@ -1,0 +1,11 @@
+{
+	"required": false,
+	"package": "com.echoes.siftmenu.mixin.client",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"PrinterInteractMixin"
+	],
+	"injectors": {
+		"defaultRequire": 0
+	}
+}

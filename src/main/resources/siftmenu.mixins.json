@@ -1,0 +1,28 @@
+{
+	"required": true,
+	"package": "com.echoes.siftmenu.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"EntityPortalTicketMixin",
+		"AnvilMenuMixin",
+		"WanderingTraderDataMixin",
+		"BlockItemPlaceMixin",
+		"FishingHookMixin",
+		"ItemStackConsumeMixin",
+		"ItemCraftedMixin",
+		"FurnaceSmeltProgressMixin",
+		"EnchantmentMenuMixin",
+		"AnimalBreedMixin",
+		"TameAnimalTriggerMixin",
+		"ExperienceGainMixin",
+		"ItemPickupMixin",
+		"SleepMixin"
+	],
+	"client": [
+		"client.AnvilScreenMixin",
+		"client.ItemModelResolverMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

@@ -1,0 +1,22 @@
+# 构建产物
+build/
+out/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# 本地环境
+lib/
+run/
+logs/
+*.log
+
+# 系统
+.DS_Store
+Thumbs.db
